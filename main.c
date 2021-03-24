@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/ipc.h> 
+#include <sys/shm.h> 
 
 char encodeRot13(char c);
 int indexOf(char c, char* s);
@@ -8,13 +10,29 @@ int stringLength(char* s);
 char* encodeRot13String(char* s);
 char* concatenate(char* str1, char* str2);
 
-int main(int argc, char** argv)
-{
-    char c = 'r';
-    char answer = encodeRot13(c);
-    printf("%c maps to %c\n", c, answer);
-    char* encodedString = encodeRot13String("hello");
-    printf("encoded string is: %s\n", encodedString);
+int main() 
+{ 
+    // ftok to generate unique key 
+    key_t key = ftok("shmfile",65); 
+
+    printf("%d\n", IPC_CREAT);
+    // shmget returns an identifier in shmid 
+    int shmid = shmget(key,1024,0666|IPC_CREAT); 
+  
+    // shmat to attach to shared memory 
+    char *str = (char*) shmat(shmid,(void*)0,0); 
+  
+    printf("Write Data : \n"); 
+    scanf("%s", str);
+    sprintf(str, encodeRot13String(str));
+    printf("Data written in memory: %s\n",str);   
+    
+    //detach from shared memory  
+    sprintf(str, str);
+    shmdt(str); 
+  
+    return 0; 
+
 }
 
 char* encodeRot13String(char* s)
